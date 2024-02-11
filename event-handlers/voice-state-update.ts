@@ -68,5 +68,5 @@ export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: V
 }
 
 function randomValueInArray<T>(arr: T[]): T {
-  return arr[Math.round(Math.random() * arr.length)];
+  return arr[Math.floor(Math.random() * arr.length)];
 }
