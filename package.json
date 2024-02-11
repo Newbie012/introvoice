@@ -1,0 +1,32 @@
+{
+  "name": "introvice-v2",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch index.ts",
+    "commands:set": "tsx scripts/set-application-commands.ts",
+    "config:set": "tsx scripts/set-config.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/opus": "^0.9.0",
+    "@discordjs/voice": "^0.16.1",
+    "@js-joda/core": "^5.6.1",
+    "@sentry/node": "^7.100.1",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.2",
+    "firebase-admin": "^12.0.0",
+    "libsodium-wrappers": "^0.7.13",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.17",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}
