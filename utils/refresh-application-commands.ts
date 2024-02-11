@@ -1,6 +1,6 @@
 import { REST, Routes, SlashCommandBuilder } from "discord.js";
-import config from "../config.json";
-import { MAXIUM_THROTTLING, MINIMUM_THROTTLING } from "../utils/const.js";
+import { config } from "../config.js";
+import { MAXIUM_THROTTLING, MINIMUM_THROTTLING } from "./const.js";
 
 const commands = [
   new SlashCommandBuilder()
@@ -31,12 +31,8 @@ const commands = [
 
 const rest = new REST({ version: "10" }).setToken(config.DISCORD_TOKEN);
 
-try {
+export async function refreshApplicationCommands() {
   console.log("Started refreshing application (/) commands.");
-
   await rest.put(Routes.applicationCommands(config.DISCORD_CLIENT_ID), { body: commands });
-
   console.log("Successfully reloaded application (/) commands.");
-} catch (error) {
-  console.error(error);
 }

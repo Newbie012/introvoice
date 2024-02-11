@@ -6,12 +6,15 @@ import { handleIntroOnCommand } from "./commands/intro-on.command.js";
 import { handleIntroRemoveCommand } from "./commands/intro-remove.command.js";
 import { handleIntroThrottleCommand } from "./commands/intro-throttle.command.js";
 import { handleIntroCommand } from "./commands/intro.command.js";
-import config from "./config.json" assert { type: "json" };
+import { config } from "./config.js";
 import { handleVoiceStateUpdate } from "./event-handlers/voice-state-update.js";
 import { appContext } from "./utils/app-context.js";
 import { initSentry } from "./utils/sentry.js";
+import { refreshApplicationCommands } from "./utils/refresh-application-commands.js";
 
 initSentry(config.SENTRY_DSN);
+
+await refreshApplicationCommands();
 
 appContext.discord.on("ready", () => {
   appContext.discord.user?.setActivity("www.introvoice.chat", {

@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import config from "../config.json" assert { type: "json" };
+import { config } from "../config.js";
 import { ServiceAccount, initializeApp } from "./firebase.js";
 
 export const appContext = {

@@ -18,7 +18,7 @@ export async function handleIntroRemoveCommand(
   await removeUserObject(interaction.user.id);
 
   const message = await interaction.reply({
-    content: `👎👎👎👎 ${interaction.user.username} has removed his intro 👎👎👎👎`,
+    content: `👎👎👎👎 @everyone ${interaction.user.username} has removed his intro 👎👎👎👎`,
     embeds: [
       {
         title: "SHAME! SHAME! SHAME!",

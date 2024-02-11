@@ -5,10 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm tsup index.ts --format esm --sourcemap",
     "dev": "tsx --watch index.ts",
-    "commands:set": "tsx scripts/set-application-commands.ts",
-    "config:set": "tsx scripts/set-config.ts"
+    "commands:set": "tsx scripts/set-application-commands.ts"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "20.11.17",
+    "tsup": "^8.0.2",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   }

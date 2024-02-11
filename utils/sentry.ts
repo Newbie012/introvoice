@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import config from "../config.json" assert { type: "json" };
+import { config } from "../config.js";
 
 export function initSentry(sentryDsn: string) {
   Sentry.init({
