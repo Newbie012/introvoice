@@ -7,7 +7,7 @@ RUN apk add -u ffmpeg
 WORKDIR /usr/src/app
 
 COPY package.json .
-COPY pnpm-lock.json .
+COPY pnpm-lock.yaml .
 RUN npm i -g pnpm
 RUN pnpm i
 RUN pnpm dist
