@@ -1,5 +1,6 @@
 import { Duration, Instant } from "@js-joda/core";
 import admin from "firebase-admin";
+import { Jsonify } from "type-fest";
 import { appContext } from "./app-context.js";
 import { MINIMUM_THROTTLING } from "./const.js";
 
@@ -33,20 +34,15 @@ export interface ServiceAccount {
   client_x509_cert_url: string;
 }
 
-export type IntroSlot = string | null;
+export interface IntroSlotValue {
+  path: string;
+  name: string;
+  createdAt: Instant;
+}
 
-type RawUserObject = {
-  username: string;
-  slots: [IntroSlot, IntroSlot, IntroSlot];
-  duration?: string;
-  throttling?: number;
-  isDisabled?: boolean;
-  updatedAt?: string;
-  playedAt?: string;
-  createdAt: string;
-};
+export type IntroSlot = IntroSlotValue | null;
 
-type SetUserObject = {
+interface UserObject {
   username: string;
   slots: [IntroSlot, IntroSlot, IntroSlot];
   duration?: Duration;
@@ -55,34 +51,49 @@ type SetUserObject = {
   updatedAt?: Instant;
   playedAt?: Instant;
   createdAt: Instant;
-};
+}
+
+interface SetUserObject {
+  username: string;
+  slots: [IntroSlot, IntroSlot, IntroSlot];
+  duration?: Duration;
+  throttling?: number;
+  isDisabled?: boolean;
+  updatedAt?: Instant;
+  playedAt?: Instant;
+  createdAt: Instant;
+}
 
 export async function updateUserObject(userId: string, data: Partial<SetUserObject>) {
+  const jsonified = jsonify(data);
+
   await appContext.firebase.db.ref(`users/${userId}`).update(
     omitUndefinedProperties({
-      username: data.username,
-      slots: data.slots,
-      duration: data.duration?.toJSON(),
-      throttling: data.throttling,
-      isDisabled: data.isDisabled,
-      updatedAt: data.updatedAt?.toJSON(),
-      playedAt: data.playedAt?.toJSON(),
-      createdAt: data.createdAt?.toJSON(),
+      username: jsonified.username,
+      slots: jsonified.slots,
+      duration: jsonified.duration,
+      throttling: jsonified.throttling,
+      isDisabled: jsonified.isDisabled,
+      updatedAt: jsonified.updatedAt,
+      playedAt: jsonified.playedAt,
+      createdAt: jsonified.createdAt,
     })
   );
 }
 
 export async function setUserObject(userId: string, data: SetUserObject) {
+  const jsonified = jsonify(data);
+
   await appContext.firebase.db.ref(`users/${userId}`).set(
     omitUndefinedProperties({
-      username: data.username,
-      slots: data.slots,
-      duration: data.duration?.toJSON(),
-      throttling: data.throttling,
-      isDisabled: data.isDisabled,
-      updatedAt: data.updatedAt?.toJSON(),
-      playedAt: data.playedAt?.toJSON(),
-      createdAt: data.createdAt.toJSON(),
+      username: jsonified.username,
+      slots: jsonified.slots,
+      duration: jsonified.duration,
+      throttling: jsonified.throttling,
+      isDisabled: jsonified.isDisabled,
+      updatedAt: jsonified.updatedAt,
+      playedAt: jsonified.playedAt,
+      createdAt: jsonified.createdAt,
     })
   );
 }
@@ -98,11 +109,11 @@ export async function getUserObject(userId: string) {
     return null;
   }
 
-  const object = userObject.val() as RawUserObject;
+  const object = userObject.val() as Jsonify<UserObject>;
 
   return {
     username: object.username,
-    slots: object.slots,
+    slots: parseSlots(object.slots),
     throttling: object.throttling ?? MINIMUM_THROTTLING,
     duration: fmap(object.duration, Duration.parse),
     isDisabled: object.isDisabled ?? false,
@@ -112,10 +123,32 @@ export async function getUserObject(userId: string) {
   };
 }
 
+function parseSlots(
+  slots: Jsonify<[IntroSlot, IntroSlot, IntroSlot]>
+): [IntroSlot, IntroSlot, IntroSlot] {
+  return slots.map((slot) => (slot === null ? null : parseSlot(slot))) as [
+    IntroSlot,
+    IntroSlot,
+    IntroSlot
+  ];
+}
+
+function parseSlot(slot: Jsonify<IntroSlotValue>): IntroSlotValue {
+  return {
+    path: slot.path,
+    name: slot.name,
+    createdAt: Instant.parse(slot.createdAt),
+  };
+}
+
 function omitUndefinedProperties<T extends object>(obj: T): T {
   return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as T;
 }
 
 function fmap<T, U>(value: T | null | undefined, fn: (value: T) => U): U | null {
   return value === null || value === undefined ? null : fn(value);
+}
+
+function jsonify<T>(value: T): Jsonify<T> {
+  return JSON.parse(JSON.stringify(value)) as Jsonify<T>;
 }

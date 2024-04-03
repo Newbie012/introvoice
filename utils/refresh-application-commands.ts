@@ -26,6 +26,8 @@ const commands = [
         .setDescription(`between ${MINIMUM_THROTTLING} and ${MAXIUM_THROTTLING}`)
     ),
 
+  new SlashCommandBuilder().setName("intro-list").setDescription("list your intros"),
+
   new SlashCommandBuilder().setName("intro-remove").setDescription("remove your intro"),
 ];
 

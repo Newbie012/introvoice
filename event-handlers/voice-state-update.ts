@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/node";
 import { VoiceState } from "discord.js";
 import { appContext } from "../utils/app-context.js";
 import { INTRO_MAX_DURATION } from "../utils/const.js";
-import { getUserObject, updateUserObject } from "../utils/firebase.js";
+import { IntroSlotValue, getUserObject, updateUserObject } from "../utils/firebase.js";
 import { createAudioResourceFromUrl, playSound } from "../utils/sounds.utils.js";
 
 export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: VoiceState) {
@@ -41,17 +41,20 @@ export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: V
     }
   }
 
-  const introFilePath = randomValueInArray(userObject.slots.filter((x): x is string => x !== null));
+  const introFile = randomValueInArray(
+    userObject.slots.filter((x): x is IntroSlotValue => x !== null)
+  );
+
   const introUrl = await appContext.firebase.storage
     .bucket()
-    .file(introFilePath)
+    .file(introFile.path)
     .getSignedUrl({ action: "read", expires: Date.now() + 15 * 60 * 1000 })
     .then((x) => x[0]);
 
   console.log({
     userId,
     channelId: nextState.channelId,
-    introFilePath: introFilePath,
+    introFile: introFile,
     url: introUrl,
     throttling: userObject.throttling,
     playedAt: userObject.playedAt?.toString(),

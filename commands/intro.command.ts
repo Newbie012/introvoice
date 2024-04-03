@@ -1,7 +1,13 @@
 import { Instant } from "@js-joda/core";
 import { CacheType, ChatInputCommandInteraction } from "discord.js";
 import { AppContext } from "../utils/app-context.js";
-import { IntroSlot, getUserObject, setUserObject, updateUserObject } from "../utils/firebase.js";
+import {
+  IntroSlot,
+  IntroSlotValue,
+  getUserObject,
+  setUserObject,
+  updateUserObject,
+} from "../utils/firebase.js";
 
 export async function handleIntroCommand(
   context: AppContext,
@@ -43,15 +49,21 @@ export async function handleIntroCommand(
 
   const userObject = await getUserObject(userId);
 
+  const slotValue: IntroSlotValue = {
+    path: introStoragePath,
+    name: attachment.name,
+    createdAt: Instant.now(),
+  };
+
   if (userObject !== null) {
     await updateUserObject(userId, {
-      slots: getUpdatedSlots(userObject.slots, slot, introStoragePath),
+      slots: getUpdatedSlots(userObject.slots, slot, slotValue),
       updatedAt: Instant.now(),
     });
   } else {
     await setUserObject(userId, {
       username: username,
-      slots: [introStoragePath, null, null],
+      slots: [slotValue, null, null],
       createdAt: Instant.now(),
     });
   }
@@ -61,10 +73,10 @@ export async function handleIntroCommand(
 
 function getUpdatedSlots(
   slots: [IntroSlot, IntroSlot, IntroSlot],
-  slot: number,
-  introStoragePath: string
+  slotNumber: number,
+  value: IntroSlotValue
 ) {
   const newSlots = slots.slice() as [IntroSlot, IntroSlot, IntroSlot];
-  newSlots[slot - 1] = introStoragePath;
+  newSlots[slotNumber - 1] = value;
   return newSlots;
 }
