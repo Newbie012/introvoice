@@ -51,6 +51,7 @@ interface UserObject {
   updatedAt?: Instant;
   playedAt?: Instant;
   createdAt: Instant;
+  totalPlayCount: number;
 }
 
 interface SetUserObject {
@@ -62,6 +63,7 @@ interface SetUserObject {
   updatedAt?: Instant;
   playedAt?: Instant;
   createdAt: Instant;
+  totalPlayCount?: number;
 }
 
 export async function updateUserObject(userId: string, data: Partial<SetUserObject>) {
@@ -77,6 +79,7 @@ export async function updateUserObject(userId: string, data: Partial<SetUserObje
       updatedAt: jsonified.updatedAt,
       playedAt: jsonified.playedAt,
       createdAt: jsonified.createdAt,
+      totalPlayCount: jsonified.totalPlayCount
     })
   );
 }
@@ -120,6 +123,7 @@ export async function getUserObject(userId: string) {
     updatedAt: fmap(object.updatedAt, Instant.parse),
     playedAt: fmap(object.playedAt, Instant.parse),
     createdAt: Instant.parse(object.createdAt),
+    totalPlayCount: object.totalPlayCount ?? 0,
   };
 }
 

@@ -41,8 +41,9 @@ export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: V
     }
   }
 
-  const introFile = randomValueInArray(
-    userObject.slots.filter((x): x is IntroSlotValue => x !== null)
+  const introFile = selectIntroBasedOnGlobalPlayCount(
+    userObject.slots.filter((x): x is IntroSlotValue => x !== null),
+    userObject.totalPlayCount
   );
 
   const introUrl = await appContext.firebase.storage
@@ -66,10 +67,19 @@ export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: V
 
   await Promise.all([
     playSound(nextState.channel, audioResource, duration),
-    updateUserObject(userId, { playedAt: now, updatedAt: now }),
+    updateUserObject(userId, {
+      playedAt: now,
+      updatedAt: now,
+      totalPlayCount: userObject.totalPlayCount + 1, // Increment global play count
+    }),
   ]);
 }
 
-function randomValueInArray<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+function selectIntroBasedOnGlobalPlayCount(
+  slots: IntroSlotValue[],
+  globalPlayCount: number
+): IntroSlotValue {
+  // Find the intro slot that should be played based on global play count
+  const slotIndex = globalPlayCount % slots.length; // Determine which intro to play next
+  return slots[slotIndex];
 }
