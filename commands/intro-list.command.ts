@@ -31,7 +31,7 @@ export async function handleIntroListCommands(
   });
 }
 
-function getBullet(index: number) {
+function getBullet(index: number): string {
   switch (index) {
     case 0:
       return "1️⃣";
@@ -40,10 +40,6 @@ function getBullet(index: number) {
     case 2:
       return "3️⃣";
     default:
-      return String(index);
+      return String(index + 1);
   }
-}
-
-function isDefined<T>(value: T | null | undefined): value is T {
-  return value !== undefined;
 }

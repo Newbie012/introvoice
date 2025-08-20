@@ -1,0 +1,33 @@
+# Development Dockerfile
+FROM node:20-alpine AS development
+
+# Install system dependencies
+RUN apk add --no-cache ffmpeg python3 make g++
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Enable corepack for pnpm
+RUN corepack enable
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S app -u 1001
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install all dependencies (including dev dependencies)
+RUN pnpm install --frozen-lockfile
+
+# Change ownership to app user
+RUN chown -R app:nodejs /usr/src/app
+
+# Switch to non-root user
+USER app
+
+# Set environment variables
+ENV NODE_ENV=development
+
+# Start the development server
+CMD ["pnpm", "dev"]

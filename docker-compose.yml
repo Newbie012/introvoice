@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: introvoice
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    # Mount volumes if you need persistent storage
+    # volumes:
+    #   - ./data:/usr/src/app/data
+    # Expose ports if needed
+    # ports:
+    #   - "3000:3000"
+    # Add environment file
+    env_file:
+      - .env
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Development service
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    container_name: introvoice-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - .env
+    command: pnpm dev
+    profiles:
+      - dev

@@ -4,7 +4,7 @@ import { Jsonify } from "type-fest";
 import { appContext } from "./app-context.js";
 import { MINIMUM_THROTTLING } from "./const.js";
 
-export async function initializeApp(credential: ServiceAccount) {
+export async function initializeApp(credential: ServiceAccount): Promise<{ db: admin.database.Database; storage: admin.storage.Storage }> {
   admin.initializeApp({
     credential: admin.credential.cert({
       clientEmail: credential.client_email,
@@ -45,11 +45,11 @@ export type IntroSlot = IntroSlotValue | null;
 interface UserObject {
   username: string;
   slots: [IntroSlot, IntroSlot, IntroSlot];
-  duration?: Duration;
-  throttling?: number;
-  isDisabled?: boolean;
-  updatedAt?: Instant;
-  playedAt?: Instant;
+  duration: Duration | undefined;
+  throttling: number | undefined;
+  isDisabled: boolean | undefined;
+  updatedAt: Instant | undefined;
+  playedAt: Instant | undefined;
   createdAt: Instant;
   totalPlayCount: number;
 }
@@ -57,16 +57,16 @@ interface UserObject {
 interface SetUserObject {
   username: string;
   slots: [IntroSlot, IntroSlot, IntroSlot];
-  duration?: Duration;
-  throttling?: number;
-  isDisabled?: boolean;
-  updatedAt?: Instant;
-  playedAt?: Instant;
+  duration: Duration | undefined;
+  throttling: number | undefined;
+  isDisabled: boolean | undefined;
+  updatedAt: Instant | undefined;
+  playedAt: Instant | undefined;
   createdAt: Instant;
-  totalPlayCount?: number;
+  totalPlayCount: number | undefined;
 }
 
-export async function updateUserObject(userId: string, data: Partial<SetUserObject>) {
+export async function updateUserObject(userId: string, data: Partial<SetUserObject>): Promise<void> {
   const jsonified = jsonify(data);
 
   await appContext.firebase.db.ref(`users/${userId}`).update(
@@ -84,7 +84,7 @@ export async function updateUserObject(userId: string, data: Partial<SetUserObje
   );
 }
 
-export async function setUserObject(userId: string, data: SetUserObject) {
+export async function setUserObject(userId: string, data: SetUserObject): Promise<void> {
   const jsonified = jsonify(data);
 
   await appContext.firebase.db.ref(`users/${userId}`).set(
@@ -101,11 +101,11 @@ export async function setUserObject(userId: string, data: SetUserObject) {
   );
 }
 
-export async function removeUserObject(userId: string) {
+export async function removeUserObject(userId: string): Promise<void> {
   await appContext.firebase.db.ref(`users/${userId}`).remove();
 }
 
-export async function getUserObject(userId: string) {
+export async function getUserObject(userId: string): Promise<UserObject | null> {
   const userObject = await appContext.firebase.db.ref(`users/${userId}`).get();
 
   if (!userObject.exists()) {
@@ -149,8 +149,8 @@ function omitUndefinedProperties<T extends object>(obj: T): T {
   return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as T;
 }
 
-function fmap<T, U>(value: T | null | undefined, fn: (value: T) => U): U | null {
-  return value === null || value === undefined ? null : fn(value);
+function fmap<T, U>(value: T | null | undefined, fn: (value: T) => U): U | undefined {
+  return value === null || value === undefined ? undefined : fn(value);
 }
 
 function jsonify<T>(value: T): Jsonify<T> {

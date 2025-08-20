@@ -12,8 +12,18 @@ import {
 export async function handleIntroCommand(
   context: AppContext,
   interaction: ChatInputCommandInteraction<CacheType>
-) {
+): Promise<void> {
   const slot = interaction.options.getInteger("slot") ?? 1;
+  const attachment = interaction.options.getAttachment("attachment");
+
+  // Validate slot number
+  if (slot < 1 || slot > 3) {
+    await interaction.reply({
+      content: "❌ Slot must be between 1 and 3",
+      ephemeral: true,
+    });
+    return;
+  }
 
   await interaction.reply({
     content: `🔃 Setting intro to slot ${slot}...`,
@@ -22,11 +32,17 @@ export async function handleIntroCommand(
 
   const userId = interaction.user.id;
   const username = interaction.user.username;
-  const attachment = interaction.options.getAttachment("attachment");
   const introStoragePath = `intros/${userId}/${slot}.mp3`;
 
-  if (attachment?.contentType !== "audio/mpeg") {
-    return interaction.editReply("❌ Please provide an mp3 file");
+  // Validate attachment
+  if (!attachment) {
+    await interaction.editReply("❌ Please provide an audio file");
+    return;
+  }
+
+  if (attachment.contentType !== "audio/mpeg") {
+    await interaction.editReply("❌ Please provide an mp3 file");
+    return;
   }
 
   const attachmentBlob = await fetch(attachment.url).then((res) => res.blob());

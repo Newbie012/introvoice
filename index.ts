@@ -44,31 +44,50 @@ appContext.discord.on("ready", () => {
 appContext.discord.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  switch (interaction.commandName) {
-    case "intro":
-      await handleIntroCommand(appContext, interaction);
-      break;
-    case "intro-on":
-      await handleIntroOnCommand(appContext, interaction);
-      break;
-    case "intro-off":
-      await handleIntroOffCommand(appContext, interaction);
-      break;
-    case "intro-throttle":
-      await handleIntroThrottleCommand(appContext, interaction);
-      break;
-    case "intro-list":
-      await handleIntroListCommands(appContext, interaction);
-      break;
-    case "intro-remove":
-      await handleIntroRemoveCommand(appContext, interaction);
-      break;
+  try {
+    switch (interaction.commandName) {
+      case "intro":
+        await handleIntroCommand(appContext, interaction);
+        break;
+      case "intro-on":
+        await handleIntroOnCommand(appContext, interaction);
+        break;
+      case "intro-off":
+        await handleIntroOffCommand(appContext, interaction);
+        break;
+      case "intro-throttle":
+        await handleIntroThrottleCommand(appContext, interaction);
+        break;
+      case "intro-list":
+        await handleIntroListCommands(appContext, interaction);
+        break;
+      case "intro-remove":
+        await handleIntroRemoveCommand(appContext, interaction);
+        break;
+      default:
+        console.warn(`Unknown command: ${interaction.commandName}`);
+    }
+  } catch (error) {
+    console.error("Error handling interaction:", error);
+    
+    const errorMessage = "An error occurred while processing your command. Please try again.";
+    
+    if (interaction.replied || interaction.deferred) {
+      await interaction.editReply(errorMessage).catch(console.error);
+    } else {
+      await interaction.reply({ content: errorMessage, ephemeral: true }).catch(console.error);
+    }
   }
 });
 
 appContext.discord.on("voiceStateUpdate", async (prevState, nextState) => {
   await Sentry.startSpan({ name: "voiceStateUpdate" }, async () => {
-    handleVoiceStateUpdate(prevState, nextState);
+    try {
+      await handleVoiceStateUpdate(prevState, nextState);
+    } catch (error) {
+      console.error("Error handling voice state update:", error);
+      Sentry.captureException(error);
+    }
   });
 });
 

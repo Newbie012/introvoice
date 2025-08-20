@@ -9,8 +9,8 @@ import {
 } from "@discordjs/voice";
 import { StageChannel, VoiceChannel } from "discord.js";
 
-export function delay(duration: number) {
-  return new Promise((resolve) => setTimeout(() => resolve(null), duration));
+export function delay(duration: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(() => resolve(), duration));
 }
 
 export async function connectToChannel(channel: VoiceChannel | StageChannel) {
@@ -31,7 +31,7 @@ export async function connectToChannel(channel: VoiceChannel | StageChannel) {
   }
 }
 
-export function createAudioResourceFromUrl(url: string) {
+export function createAudioResourceFromUrl(url: string): AudioResource {
   const resource = createAudioResource(url, {
     inlineVolume: true,
     inputType: StreamType.Arbitrary,
@@ -46,7 +46,7 @@ export async function playSound(
   channel: VoiceChannel | StageChannel,
   audioResource: AudioResource,
   maxDuration: number,
-) {
+): Promise<void> {
   const connection = await connectToChannel(channel);
   const audioPlayer = createAudioPlayer();
   await entersState(connection, VoiceConnectionStatus.Ready, 5e3);
@@ -67,7 +67,7 @@ export async function playSound(
         }
 
         clearTimeout(fallbackTimeout);
-        return resolve(null);
+        return resolve();
       }
     });
   });
