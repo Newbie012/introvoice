@@ -9,8 +9,8 @@ import {
 } from "@discordjs/voice";
 import { StageChannel, VoiceChannel } from "discord.js";
 
-export function delay(duration: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(() => resolve(), duration));
+export function delay(duration: number) {
+  return new Promise((resolve) => setTimeout(() => resolve(null), duration));
 }
 
 export async function connectToChannel(channel: VoiceChannel | StageChannel) {
@@ -22,6 +22,13 @@ export async function connectToChannel(channel: VoiceChannel | StageChannel) {
     debug: true,
   });
 
+  connection.on("stateChange", (oldState, newState) => {
+    console.log(`[voice] state: ${oldState.status} -> ${newState.status}`);
+  });
+  connection.on("error", (error) => {
+    console.error("[voice] connection error:", error);
+  });
+
   try {
     await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
     return connection;
@@ -31,7 +38,7 @@ export async function connectToChannel(channel: VoiceChannel | StageChannel) {
   }
 }
 
-export function createAudioResourceFromUrl(url: string): AudioResource {
+export function createAudioResourceFromUrl(url: string) {
   const resource = createAudioResource(url, {
     inlineVolume: true,
     inputType: StreamType.Arbitrary,
@@ -46,7 +53,7 @@ export async function playSound(
   channel: VoiceChannel | StageChannel,
   audioResource: AudioResource,
   maxDuration: number,
-): Promise<void> {
+) {
   const connection = await connectToChannel(channel);
   const audioPlayer = createAudioPlayer();
   await entersState(connection, VoiceConnectionStatus.Ready, 5e3);
@@ -67,7 +74,7 @@ export async function playSound(
         }
 
         clearTimeout(fallbackTimeout);
-        return resolve();
+        return resolve(null);
       }
     });
   });

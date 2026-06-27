@@ -46,6 +46,11 @@ export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: V
     userObject.totalPlayCount
   );
 
+  if (!introFile) {
+    console.log(`No intro file found for user ${userId}`);
+    return;
+  }
+
   const introUrl = await appContext.firebase.storage
     .bucket()
     .file(introFile.path)
@@ -75,10 +80,7 @@ export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: V
   ]);
 }
 
-function selectIntroBasedOnGlobalPlayCount(
-  slots: IntroSlotValue[],
-  globalPlayCount: number
-): IntroSlotValue {
+function selectIntroBasedOnGlobalPlayCount(slots: IntroSlotValue[], globalPlayCount: number) {
   // Find the intro slot that should be played based on global play count
   const slotIndex = globalPlayCount % slots.length; // Determine which intro to play next
   return slots[slotIndex];

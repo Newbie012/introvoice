@@ -2,21 +2,25 @@ FROM node:22-alpine
 
 USER root
 
-# Install system dependencies exactly like @discordjs/opus CI
+# System dependencies: ffmpeg for audio, build toolchain to compile native
+# modules (e.g. @discordjs/opus) from source on musl/Alpine.
 RUN apk add --update && \
     apk add --no-cache ca-certificates git curl build-base python3 g++ make ffmpeg
 
 WORKDIR /usr/src/app
 
-COPY package.json .
+# Pin pnpm via corepack using the integrity-hashed "packageManager" field.
+# COREPACK_ENABLE_DOWNLOAD_PROMPT=0 keeps the download non-interactive in CI.
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
 
-# Use npm install --build-from-source to compile native modules (like @discordjs/opus CI)
-RUN npm install --build-from-source
+# Install from the frozen lockfile for reproducible, supply-chain-safe builds.
+# allowBuilds in pnpm-workspace.yaml whitelists which packages may run scripts.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-# Install pnpm and build the project
-RUN npm i -g pnpm
 RUN pnpm build
 
 ENV NODE_ENV production

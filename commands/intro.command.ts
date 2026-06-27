@@ -12,7 +12,7 @@ import {
 export async function handleIntroCommand(
   context: AppContext,
   interaction: ChatInputCommandInteraction<CacheType>
-): Promise<void> {
+) {
   const slot = interaction.options.getInteger("slot") ?? 1;
   const attachment = interaction.options.getAttachment("attachment");
 
@@ -40,7 +40,12 @@ export async function handleIntroCommand(
     return;
   }
 
-  if (attachment.contentType !== "audio/mpeg") {
+  const isMp3 =
+    attachment.name.toLowerCase().endsWith(".mp3") ||
+    attachment.contentType?.startsWith("audio/mpeg") ||
+    attachment.contentType === "audio/mp3";
+
+  if (!isMp3) {
     await interaction.editReply("❌ Please provide an mp3 file");
     return;
   }
