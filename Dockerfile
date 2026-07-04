@@ -20,6 +20,13 @@ RUN corepack enable
 # Forcing IPv4-first resolution makes the native build reliable.
 ENV NODE_OPTIONS=--dns-result-order=ipv4first
 
+# @discordjs/opus vendors libopus, whose ARM/NEON path (celt_neon_intr.c) has an
+# implicit function declaration that GCC 14+ (Alpine) treats as a hard error. The
+# symbol is defined elsewhere in libopus, so downgrading it to a warning compiles
+# and links cleanly. Only affects the aarch64 native build.
+ENV CFLAGS="-Wno-error=implicit-function-declaration"
+ENV CXXFLAGS="-Wno-error=implicit-function-declaration"
+
 # Install from the frozen lockfile for reproducible, supply-chain-safe builds.
 # allowBuilds in pnpm-workspace.yaml whitelists which packages may run scripts.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
