@@ -14,6 +14,12 @@ WORKDIR /usr/src/app
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 
+# Some hosts (e.g. Oracle Cloud) have no working IPv6 egress. Node's Happy-Eyeballs
+# otherwise attempts IPv6 first and hangs, causing node-gyp to time out (ETIMEDOUT)
+# fetching Node headers to compile @discordjs/opus (no arm64-musl prebuild exists).
+# Forcing IPv4-first resolution makes the native build reliable.
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
+
 # Install from the frozen lockfile for reproducible, supply-chain-safe builds.
 # allowBuilds in pnpm-workspace.yaml whitelists which packages may run scripts.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
