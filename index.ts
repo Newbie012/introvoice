@@ -1,6 +1,6 @@
 import { generateDependencyReport } from "@discordjs/voice";
 import * as Sentry from "@sentry/node";
-import { ActivityType, OAuth2Scopes } from "discord.js";
+import { ActivityType, MessageFlags, OAuth2Scopes } from "discord.js";
 import { handleIntroListCommands } from "./commands/intro-list.command.js";
 import { handleIntroOffCommand } from "./commands/intro-off.command.js";
 import { handleIntroOnCommand } from "./commands/intro-on.command.js";
@@ -44,6 +44,17 @@ appContext.discord.on("ready", () => {
 appContext.discord.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
+  const { commandName } = interaction;
+  const startedAt = Date.now();
+
+  console.log(
+    `[command] ${commandName} started user=${interaction.user.tag} (${interaction.user.id}) guild=${interaction.guildId}`
+  );
+
+  Sentry.setTag("on", "interactionCreate");
+  Sentry.setTag("command", commandName);
+  Sentry.setTag("userId", interaction.user.id);
+
   try {
     switch (interaction.commandName) {
       case "intro":
@@ -67,15 +78,20 @@ appContext.discord.on("interactionCreate", async (interaction) => {
       default:
         console.warn(`Unknown command: ${interaction.commandName}`);
     }
+
+    console.log(`[command] ${commandName} succeeded in ${Date.now() - startedAt}ms`);
   } catch (error) {
-    console.error("Error handling interaction:", error);
-    
+    console.error(`[command] ${commandName} failed after ${Date.now() - startedAt}ms:`, error);
+    Sentry.captureException(error);
+
     const errorMessage = "An error occurred while processing your command. Please try again.";
-    
+
     if (interaction.replied || interaction.deferred) {
       await interaction.editReply(errorMessage).catch(console.error);
     } else {
-      await interaction.reply({ content: errorMessage, ephemeral: true }).catch(console.error);
+      await interaction
+        .reply({ content: errorMessage, flags: MessageFlags.Ephemeral })
+        .catch(console.error);
     }
   }
 });

@@ -1,5 +1,5 @@
 import { Instant } from "@js-joda/core";
-import { CacheType, ChatInputCommandInteraction } from "discord.js";
+import { CacheType, ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { AppContext } from "../utils/app-context.js";
 import {
   IntroSlot,
@@ -20,14 +20,14 @@ export async function handleIntroCommand(
   if (slot < 1 || slot > 3) {
     await interaction.reply({
       content: "❌ Slot must be between 1 and 3",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   await interaction.reply({
     content: `🔃 Setting intro to slot ${slot}...`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 
   const userId = interaction.user.id;
@@ -36,6 +36,7 @@ export async function handleIntroCommand(
 
   // Validate attachment
   if (!attachment) {
+    console.log(`[intro] ${username} rejected: no attachment`);
     await interaction.editReply("❌ Please provide an audio file");
     return;
   }
@@ -46,6 +47,9 @@ export async function handleIntroCommand(
     attachment.contentType === "audio/mp3";
 
   if (!isMp3) {
+    console.log(
+      `[intro] ${username} rejected: not an mp3 (${attachment.name}, ${attachment.contentType})`
+    );
     await interaction.editReply("❌ Please provide an mp3 file");
     return;
   }
@@ -55,6 +59,7 @@ export async function handleIntroCommand(
   const bufferSizeInKb = attachmentBuffer.byteLength / 1024;
 
   if (bufferSizeInKb > 1024) {
+    console.log(`[intro] ${username} rejected: ${Math.round(bufferSizeInKb)}KB exceeds 1MB`);
     return interaction.editReply("❌ File size must be less than 1MB");
   }
 
@@ -65,6 +70,10 @@ export async function handleIntroCommand(
       contentType: "audio/mpeg",
       metadata: { userId, username },
     });
+
+  console.log(
+    `[intro] ${username} uploaded ${attachment.name} (${Math.round(bufferSizeInKb)}KB) to ${introStoragePath}`
+  );
 
   await interaction.editReply("🔃 Intro file uploaded. Saving slot...");
 
@@ -88,6 +97,8 @@ export async function handleIntroCommand(
       createdAt: Instant.now(),
     });
   }
+
+  console.log(`[intro] ${username} set slot ${slot} to ${attachment.name}`);
 
   await interaction.editReply("✅ Intro set!");
 }

@@ -1,4 +1,4 @@
-import { CacheType, ChatInputCommandInteraction } from "discord.js";
+import { CacheType, ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { AppContext } from "../utils/app-context.js";
 import { getUserObject } from "../utils/firebase.js";
 
@@ -11,7 +11,7 @@ export async function handleIntroListCommands(
   if (userObject === null) {
     return interaction.reply({
       content: `You currently don't have any slots`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -27,7 +27,7 @@ export async function handleIntroListCommands(
         })
         .join("\n"),
     ].join("\n"),
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 

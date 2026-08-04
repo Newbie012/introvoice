@@ -1,4 +1,4 @@
-import { CacheType, ChatInputCommandInteraction } from "discord.js";
+import { CacheType, ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { AppContext } from "../utils/app-context.js";
 import { getUserObject, removeUserObject } from "../utils/firebase.js";
 
@@ -11,7 +11,7 @@ export async function handleIntroRemoveCommand(
   if (userObject === null) {
     return interaction.reply({
       content: `❌ You don't have an intro to turn on. Set one up with \`/intro\``,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
