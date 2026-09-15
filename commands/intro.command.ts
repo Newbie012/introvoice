@@ -1,5 +1,5 @@
 import { Instant } from "@js-joda/core";
-import { CacheType, ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { Attachment, CacheType, ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { AppContext } from "../utils/app-context.js";
 import {
   IntroSlot,
@@ -32,7 +32,6 @@ export async function handleIntroCommand(
 
   const userId = interaction.user.id;
   const username = interaction.user.username;
-  const introStoragePath = `intros/${userId}/${slot}.mp3`;
 
   // Validate attachment
   if (!attachment) {
@@ -41,18 +40,17 @@ export async function handleIntroCommand(
     return;
   }
 
-  const isMp3 =
-    attachment.name.toLowerCase().endsWith(".mp3") ||
-    attachment.contentType?.startsWith("audio/mpeg") ||
-    attachment.contentType === "audio/mp3";
+  const format = getAudioFormat(attachment);
 
-  if (!isMp3) {
+  if (format === null) {
     console.log(
-      `[intro] ${username} rejected: not an mp3 (${attachment.name}, ${attachment.contentType})`
+      `[intro] ${username} rejected: unsupported format (${attachment.name}, ${attachment.contentType})`
     );
-    await interaction.editReply("❌ Please provide an mp3 file");
+    await interaction.editReply("❌ Please provide an mp3 or ogg file");
     return;
   }
+
+  const introStoragePath = `intros/${userId}/${slot}.${format.extension}`;
 
   const attachmentBlob = await fetch(attachment.url).then((res) => res.blob());
   const attachmentBuffer = await attachmentBlob.arrayBuffer();
@@ -67,7 +65,7 @@ export async function handleIntroCommand(
     .bucket()
     .file(introStoragePath)
     .save(Buffer.from(attachmentBuffer), {
-      contentType: "audio/mpeg",
+      contentType: format.contentType,
       metadata: { userId, username },
     });
 
@@ -101,6 +99,32 @@ export async function handleIntroCommand(
   console.log(`[intro] ${username} set slot ${slot} to ${attachment.name}`);
 
   await interaction.editReply("✅ Intro set!");
+}
+
+interface AudioFormat {
+  extension: string;
+  contentType: string;
+}
+
+/** Discord's reported contentType is unreliable for ogg, so the file name is checked too. */
+function getAudioFormat(attachment: Attachment): AudioFormat | null {
+  const name = attachment.name.toLowerCase();
+  const contentType = attachment.contentType?.split(";")[0]?.trim() ?? "";
+
+  if (name.endsWith(".mp3") || contentType === "audio/mpeg" || contentType === "audio/mp3") {
+    return { extension: "mp3", contentType: "audio/mpeg" };
+  }
+
+  if (
+    name.endsWith(".ogg") ||
+    name.endsWith(".oga") ||
+    contentType === "audio/ogg" ||
+    contentType === "application/ogg"
+  ) {
+    return { extension: "ogg", contentType: "audio/ogg" };
+  }
+
+  return null;
 }
 
 function getUpdatedSlots(

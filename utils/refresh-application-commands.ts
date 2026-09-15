@@ -7,7 +7,7 @@ const commands = [
     .setName("intro")
     .setDescription("set your intro")
     .addAttachmentOption((option) =>
-      option.setName("attachment").setDescription("mp3 file").setRequired(true)
+      option.setName("attachment").setDescription("mp3 or ogg file").setRequired(true)
     )
     .addIntegerOption((option) =>
       option.setName("slot").setDescription("between 1 and 3").setMinValue(1).setMaxValue(3)
