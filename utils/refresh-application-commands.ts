@@ -28,7 +28,16 @@ const commands = [
 
   new SlashCommandBuilder().setName("intro-list").setDescription("list your intros"),
 
-  new SlashCommandBuilder().setName("intro-remove").setDescription("remove your intro"),
+  new SlashCommandBuilder()
+    .setName("intro-remove")
+    .setDescription("remove your intro")
+    .addIntegerOption((option) =>
+      option
+        .setName("slot")
+        .setDescription("between 1 and 3 (omit to remove all)")
+        .setMinValue(1)
+        .setMaxValue(3)
+    ),
 ];
 
 const rest = new REST({ version: "10" }).setToken(config.DISCORD_TOKEN);
