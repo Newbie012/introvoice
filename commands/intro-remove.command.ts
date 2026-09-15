@@ -1,7 +1,14 @@
 import { Instant } from "@js-joda/core";
 import { CacheType, ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { AppContext } from "../utils/app-context.js";
-import { IntroSlot, getUserObject, removeUserObject, updateUserObject } from "../utils/firebase.js";
+import {
+  IntroSlot,
+  IntroSlotValue,
+  deleteIntroFiles,
+  getUserObject,
+  removeUserObject,
+  updateUserObject,
+} from "../utils/firebase.js";
 
 export async function handleIntroRemoveCommand(
   _context: AppContext,
@@ -25,7 +32,9 @@ export async function handleIntroRemoveCommand(
       });
     }
 
-    if (userObject.slots[slot - 1] === null) {
+    const removedSlot = userObject.slots[slot - 1];
+
+    if (removedSlot === null || removedSlot === undefined) {
       return interaction.reply({
         content: `❌ Slot ${slot} is already empty`,
         flags: MessageFlags.Ephemeral,
@@ -38,6 +47,7 @@ export async function handleIntroRemoveCommand(
     // Only shame when the last intro is gone; otherwise just clear the slot.
     if (slots.some((value) => value !== null)) {
       await updateUserObject(interaction.user.id, { slots, updatedAt: Instant.now() });
+      await deleteIntroFiles([removedSlot.path]);
 
       return interaction.reply({
         content: `✅ Slot ${slot} removed.`,
@@ -47,6 +57,9 @@ export async function handleIntroRemoveCommand(
   }
 
   await removeUserObject(interaction.user.id);
+  await deleteIntroFiles(
+    userObject.slots.filter((value): value is IntroSlotValue => value !== null).map((x) => x.path)
+  );
 
   const message = await interaction.reply({
     content: `👎👎👎👎 @everyone ${interaction.user.username} has removed his intro 👎👎👎👎`,

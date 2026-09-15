@@ -158,3 +158,22 @@ function fmap<T, U>(value: T | null | undefined, fn: (value: T) => U): U | null 
 function jsonify<T>(value: T): Jsonify<T> {
   return JSON.parse(JSON.stringify(value)) as Jsonify<T>;
 }
+
+/**
+ * Deletes intro files from storage once nothing references them.
+ *
+ * Best-effort: the slot is already gone from the database by the time this runs, so a storage
+ * failure must not fail the command the user is waiting on.
+ */
+export async function deleteIntroFiles(paths: string[]) {
+  await Promise.all(
+    paths.map(async (path) => {
+      try {
+        await appContext.firebase.storage.bucket().file(path).delete({ ignoreNotFound: true });
+        console.log(`[storage] deleted ${path}`);
+      } catch (error) {
+        console.error(`[storage] failed to delete ${path}:`, error);
+      }
+    })
+  );
+}

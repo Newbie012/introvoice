@@ -4,6 +4,7 @@ import { AppContext } from "../utils/app-context.js";
 import {
   IntroSlot,
   IntroSlotValue,
+  deleteIntroFiles,
   getUserObject,
   setUserObject,
   updateUserObject,
@@ -76,6 +77,7 @@ export async function handleIntroCommand(
   await interaction.editReply("🔃 Intro file uploaded. Saving slot...");
 
   const userObject = await getUserObject(userId);
+  const previousSlot = userObject?.slots[slot - 1] ?? null;
 
   const slotValue: IntroSlotValue = {
     path: introStoragePath,
@@ -97,6 +99,11 @@ export async function handleIntroCommand(
   }
 
   console.log(`[intro] ${username} set slot ${slot} to ${attachment.name}`);
+
+  // A different format means a different path, so the old file is no longer referenced.
+  if (previousSlot !== null && previousSlot.path !== introStoragePath) {
+    await deleteIntroFiles([previousSlot.path]);
+  }
 
   await interaction.editReply("✅ Intro set!");
 }
