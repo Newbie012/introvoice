@@ -1,6 +1,6 @@
 import { Duration, Instant } from "@js-joda/core";
 import * as Sentry from "@sentry/node";
-import { VoiceState } from "discord.js";
+import { PermissionsBitField, VoiceState } from "discord.js";
 import { appContext } from "../utils/app-context.js";
 import { INTRO_MAX_DURATION } from "../utils/const.js";
 import { IntroSlotValue, getUserObject, updateUserObject } from "../utils/firebase.js";
@@ -23,6 +23,24 @@ export async function handleVoiceStateUpdate(prevState: VoiceState, nextState: V
 
   if (nextState.channel === null || userId === undefined) {
     // do nothing, someone has disconnected
+    return;
+  }
+
+  // Discord silently ignores a join for a channel the bot can't see, leaving the connection stuck
+  // in `signalling` until entersState aborts 30s later. Bail out with a useful log instead.
+  const me = nextState.guild.members.me ?? (await nextState.guild.members.fetchMe());
+  const permissions = nextState.channel.permissionsFor(me);
+  const requiredPermissions = [
+    PermissionsBitField.Flags.ViewChannel,
+    PermissionsBitField.Flags.Connect,
+    PermissionsBitField.Flags.Speak,
+  ];
+
+  if (!permissions?.has(requiredPermissions)) {
+    const missing = new PermissionsBitField(permissions?.missing(requiredPermissions) ?? []);
+    console.log(
+      `[voice] skipping ${nextState.channel.name} (${nextState.channelId}): missing ${missing.toArray().join(", ") || "permissions"}`
+    );
     return;
   }
 
